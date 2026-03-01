@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { useTheme } from '../../../shared/components/ThemeProvider';
 import type { LoginCredentials } from '../types/auth.types';
-import { validators } from '../../../shared/utils/validator';
+import { validators } from '../../../shared/utils/validators';
 import { authService } from '../services/authService';
 
 interface Props {
@@ -152,7 +152,7 @@ export default function LoginForm({ onSubmit, loading, error }: Props) {
             <span className="auth-chk-box" />
             <span className="text-xs" style={{ color: t2 }}>Remember me</span>
           </label>
-          <a href="/forgot-password" className="text-xs font-semibold" style={{ color: link }}>
+          <a href="/forgot-password" className="text-xs font-semibold hover:underline" style={{ color: link }}>
             Forgot password?
           </a>
         </div>

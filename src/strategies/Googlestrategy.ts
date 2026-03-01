@@ -30,7 +30,7 @@ export const initGoogleStrategy = (): void => {
               user.isVerified = true;
               await user.save();
             }
-            return done(null, user);
+            return done(null, user.toObject() as any);
           }
 
           user = await User.create({
@@ -43,7 +43,7 @@ export const initGoogleStrategy = (): void => {
             role:       'buyer',
           });
 
-          return done(null, user);
+          return done(null, user.toObject() as any);
 
         } catch (error) {
           return done(error as Error, undefined);

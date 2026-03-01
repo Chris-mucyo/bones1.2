@@ -31,7 +31,7 @@ export default function SignupPage() {
 
   return (
     <div
-      className="flex h-[100dvh] sm:h-screen overflow-hidden transition-colors duration-300"
+      className="flex h-screen overflow-hidden transition-colors duration-300"
       style={{ background: t.pageBg }}
       data-theme={theme}
     >
@@ -86,51 +86,47 @@ export default function SignupPage() {
 
       {/* ══════════ RIGHT — wizard ══════════ */}
       <div
-        className="flex flex-col items-center flex-1 lg:flex-[0_0_48%] overflow-y-auto overflow-x-hidden relative px-4 sm:px-6 py-8 transition-colors duration-300"
+        className="flex flex-col items-center justify-center flex-1 lg:flex-[0_0_48%] overflow-y-auto relative px-6 py-8 transition-colors duration-300"
         style={{ background: t.rightBg, borderLeft: `1px solid ${t.rightBorder}` }}
       >
         {/* Top accent line */}
         <div className="absolute top-0 left-0 right-0 h-[3px] pointer-events-none"
           style={{ background: `linear-gradient(90deg,transparent,#22c55e,transparent)`, opacity: isDark ? 0.4 : 0.7 }} />
 
-        {/* Inner wrapper for safe mobile scrolling & vertical centering */}
-        <div className="w-full max-w-[390px] my-auto flex flex-col pt-4 pb-8 lg:pt-0">
-          
-          {/* ── Top bar: logo + theme toggle ── */}
-          <div className="flex items-center justify-between w-full mb-6"
-            style={{ animation: 'fadeUp 0.5s cubic-bezier(.22,1,.36,1) both' }}>
+        {/* ── Top bar: logo + theme toggle ── */}
+        <div className="flex items-center justify-between w-full max-w-[400px] mb-6"
+          style={{ animation: 'fadeUp 0.5s cubic-bezier(.22,1,.36,1) both' }}>
 
-            {/* Logo */}
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-[9px] bg-green-500 flex items-center justify-center flex-shrink-0">
-                <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="#fff" strokeWidth="2.2">
-                  <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
-                  <line x1="3" y1="6" x2="21" y2="6"/>
-                  <path d="M16 10a4 4 0 01-8 0"/>
-                </svg>
-              </div>
-              <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 19, fontWeight: 700, color: t.logoText }}
-                className="transition-colors duration-300">
-                Shop<span style={{ color: '#22c55e' }}>Hub</span>
-              </span>
+          {/* Logo */}
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-[9px] bg-green-500 flex items-center justify-center flex-shrink-0">
+              <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="#fff" strokeWidth="2.2">
+                <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+                <line x1="3" y1="6" x2="21" y2="6"/>
+                <path d="M16 10a4 4 0 01-8 0"/>
+              </svg>
             </div>
-
-            {/* Theme toggle */}
-            <button
-              onClick={toggle}
-              title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl border transition-all duration-300 hover:scale-105 active:scale-95"
-              style={{ background: t.toggleBg, borderColor: t.toggleBorder, color: t.toggleColor }}
-            >
-              {isDark
-                ? <><Sun  size={14} /><span className="text-[11px] font-semibold hidden sm:inline">Light</span></>
-                : <><Moon size={14} /><span className="text-[11px] font-semibold hidden sm:inline">Dark</span></>
-              }
-            </button>
+            <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 19, fontWeight: 700, color: t.logoText }}
+              className="transition-colors duration-300">
+              Shop<span style={{ color: '#22c55e' }}>Hub</span>
+            </span>
           </div>
 
-          <SignupWizard isDark={isDark} />
+          {/* Theme toggle */}
+          <button
+            onClick={toggle}
+            title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl border transition-all duration-300 hover:scale-105 active:scale-95"
+            style={{ background: t.toggleBg, borderColor: t.toggleBorder, color: t.toggleColor }}
+          >
+            {isDark
+              ? <><Sun  size={14} /><span className="text-[11px] font-semibold hidden sm:inline">Light</span></>
+              : <><Moon size={14} /><span className="text-[11px] font-semibold hidden sm:inline">Dark</span></>
+            }
+          </button>
         </div>
+
+        <SignupWizard isDark={isDark} />
       </div>
 
     </div>

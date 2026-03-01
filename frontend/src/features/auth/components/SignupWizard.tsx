@@ -137,7 +137,7 @@ export default function SignupWizard({ isDark = true }: Props) {
     ) : null;
 
   return (
-    <div className="w-full max-w-[390px] mx-auto">
+    <div className="w-full max-w-[400px]">
 
       {/* ── Progress bar ── */}
       <div className="h-[3px] rounded-full mb-5 overflow-hidden" style={{ background: tk.progressBg }}>
