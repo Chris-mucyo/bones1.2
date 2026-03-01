@@ -1,4 +1,3 @@
-import React from 'react';
 import AppLayout from '../../../shared/layouts/AppLayout';
 import { useTheme } from '../../../shared/components/ThemeProvider';
 

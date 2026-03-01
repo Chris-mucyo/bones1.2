@@ -14,7 +14,7 @@ export default function FeaturedRow({ isDark }: Props) {
   const border = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
   const cardBg = isDark ? '#0f0f0f' : '#ffffff';
   const text1  = isDark ? '#fff' : '#0f0f0f';
-  const text2  = isDark ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.55)';
+  
 
   return (
     <div style={{

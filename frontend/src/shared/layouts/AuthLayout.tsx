@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { useTheme } from '../components/ThemeProvider';
 import CommerceScene from '../../features/auth/components/CommerceScene';
 
