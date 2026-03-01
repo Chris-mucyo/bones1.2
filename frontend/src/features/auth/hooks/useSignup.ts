@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { SignupFormData, StepErrors } from '../types/signup.types';
+import type { SignupFormData, StepErrors, UserRole } from '../types/signup.types';
 import { INITIAL_FORM } from '../types/signup.types';
 
 const STORAGE_KEY = 'shophub_signup_form';

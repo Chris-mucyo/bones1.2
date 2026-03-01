@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { AuthState, LoginCredentials, RegisterCredentials } from '../types/auth.types';
+import { AuthState, LoginCredentials, RegisterCredentials } from '../types/auth.types';
 import { authService } from '../services/authService';
 
 export function useAuth() {
