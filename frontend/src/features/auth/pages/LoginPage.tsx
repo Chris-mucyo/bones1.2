@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import AuthLayout from '../../../shared/layouts/AuthLayout';
 import LoginForm from '../components/LoginForm';
 import { useAuth } from '../hooks/useAuth';
-import { LoginCredentials } from '../types/auth.types';
+import type { LoginCredentials } from '../types/auth.types';
 
 /*
   To use your own background image, import it here:
