@@ -108,6 +108,14 @@ export default function NotFoundPage() {
           </div>
         </div>
 
+        {/* 404 Not Found label */}
+        <p
+          className="text-xs font-bold tracking-[3px] uppercase text-green-500/60 -mt-3 mb-5"
+          style={{ animation: 'fadeUp .6s cubic-bezier(.22,1,.36,1) .1s both' }}
+        >
+          404 · Not Found
+        </p>
+
         {/* Broken chain icon */}
         <div className="flex items-center gap-3 mb-6"
           style={{ animation: 'fadeUp .6s cubic-bezier(.22,1,.36,1) .15s both' }}>
