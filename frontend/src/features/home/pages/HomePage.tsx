@@ -16,7 +16,7 @@ export default function HomePage() {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const [activeCategory, setActiveCategory] = useState('All');
-  const [search, setSearch] = useState('');
+  const [search] = useState('');
 
   const handleCategoryChange = useCallback((cat: string) => {
     setActiveCategory(cat);

@@ -144,28 +144,15 @@ export default function ListingCard({ listing, isDark, index }: Props) {
         <span style={{ fontSize: 10, color: text3 }}>{listing.createdAt}</span>
 
         {/* Chat button */}
-        <button style={{
-          display: 'flex', alignItems: 'center', gap: 5,
-          padding: '6px 13px', borderRadius: 20,
-          border: `1px solid ${border}`,
-          background: 'transparent', color: text2,
-          fontSize: 11, fontWeight: 600, cursor: 'pointer',
-          transition: 'all .2s', fontFamily: "'Outfit', sans-serif",
-        }}
-          onMouseEnter={e => {
-            (e.currentTarget as HTMLButtonElement).style.borderColor = '#22c55e';
-            (e.currentTarget as HTMLButtonElement).style.color = '#22c55e';
-          }}
-          onMouseLeave={e => {
-            (e.currentTarget as HTMLButtonElement).style.borderColor = border;
-            (e.currentTarget as HTMLButtonElement).style.color = text2;
-          }}
+        <a
+          href={`/chat?seller=${encodeURIComponent(listing.seller.shopName ?? listing.seller.name)}&item=${encodeURIComponent(listing.title)}&price=${listing.price}`}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/[0.12] bg-transparent text-white/55 text-[11px] font-semibold hover:border-green-500 hover:text-green-500 transition-all no-underline"
         >
-          <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
           </svg>
           Chat
-        </button>
+        </a>
       </div>
     </div>
   );

@@ -1,14 +1,15 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 
-// Auth pages (eager — needed immediately)
+// Eager — needed on first load
 import LoginPage          from '../features/auth/pages/LoginPage';
 import SignupPage         from '../features/auth/pages/SignupPage';
 import OAuthSuccess       from '../features/auth/pages/OAuthSuccess';
 import ForgotPasswordPage from '../features/auth/pages/ForgotPasswordPage';
 import NotFoundPage       from '../features/auth/pages/NotFoundPage';
+import LandingPage        from '../features/auth/pages/LandingPage';
 
-// App pages (lazy — only loaded after login)
+// Lazy — loaded after login
 const HomePage            = lazy(() => import('../features/home/pages/HomePage'));
 const ChatPage            = lazy(() => import('../features/chat/pages/ChatPage'));
 const ProfilePage         = lazy(() => import('../features/profile/pages/ProfilePage'));
@@ -29,7 +30,10 @@ export default function Router() {
     <BrowserRouter>
       <Suspense fallback={<Spinner />}>
         <Routes>
-          {/* ── Public / Auth ── */}
+          {/* ── Landing ── */}
+          <Route path="/"                element={<LandingPage />} />
+
+          {/* ── Auth ── */}
           <Route path="/login"           element={<LoginPage />} />
           <Route path="/register"        element={<SignupPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
@@ -44,14 +48,13 @@ export default function Router() {
           <Route path="/listings/new"    element={<CreateListingPage />} />
           <Route path="/listings/:id"    element={<ListingDetailPage />} />
 
-          {/* ── Role dashboards ── */}
-          <Route path="/buyer/dashboard"       element={<BuyerDashboard />} />
-          <Route path="/seller/dashboard"      element={<SellerDashboard />} />
-          <Route path="/wholesaler/dashboard"  element={<WholesalerDashboard />} />
+          {/* ── Dashboards ── */}
+          <Route path="/buyer/dashboard"      element={<BuyerDashboard />} />
+          <Route path="/seller/dashboard"     element={<SellerDashboard />} />
+          <Route path="/wholesaler/dashboard" element={<WholesalerDashboard />} />
 
-          {/* ── Redirects & 404 ── */}
-          <Route path="/"  element={<Navigate to="/home" replace />} />
-          <Route path="*"  element={<NotFoundPage />} />
+          {/* ── 404 ── */}
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>
     </BrowserRouter>

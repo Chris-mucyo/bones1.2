@@ -98,18 +98,8 @@ export default function SignupPage() {
           style={{ animation: 'fadeUp 0.5s cubic-bezier(.22,1,.36,1) both' }}>
 
           {/* Logo */}
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-[9px] bg-green-500 flex items-center justify-center flex-shrink-0">
-              <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="#fff" strokeWidth="2.2">
-                <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
-                <line x1="3" y1="6" x2="21" y2="6"/>
-                <path d="M16 10a4 4 0 01-8 0"/>
-              </svg>
-            </div>
-            <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 19, fontWeight: 700, color: t.logoText }}
-              className="transition-colors duration-300">
-              Shop<span style={{ color: '#22c55e' }}>Hub</span>
-            </span>
+          <div className=" w-40  rounded-lg flex items-center justify-center">
+            <img src="../src/assets/shophub-logo.svg" alt="" />
           </div>
 
           {/* Theme toggle */}
