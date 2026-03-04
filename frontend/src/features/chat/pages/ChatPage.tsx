@@ -124,15 +124,20 @@ export default function ChatPage() {
   return (
     <div className="fixed inset-0 flex overflow-hidden bg-black" style={{ fontFamily: "'Outfit', sans-serif" }}>
 
+      {/* ══════════════════════════════════════════════════
+          STRIP 1 — ShopHub app nav (WhatsApp icon strip)
+      ══════════════════════════════════════════════════ */}
       <div className="hidden md:flex flex-col items-center py-4 gap-1 bg-[#0a0a0a] border-r border-white/[0.07]"
         style={{ width: 68 }}>
 
         {/* Logo */}
         <Link to="/home" className="no-underline mb-4">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-green-400 transition-colors">
-            <div className=" w-40  rounded-lg flex items-center justify-center">
-            <img src="../src/assets/shophub-logo.svg" alt="" />
-          </div>
+          <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center hover:bg-green-400 transition-colors">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2.5">
+              <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <path d="M16 10a4 4 0 01-8 0"/>
+            </svg>
           </div>
         </Link>
 

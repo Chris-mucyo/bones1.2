@@ -1,7 +1,62 @@
 import { Link } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 
-// ── animated counter ──────────────────────────────────────
+// ── Particles canvas ──────────────────────────────────────
+function Particles() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const canvas = canvasRef.current!;
+    const ctx = canvas.getContext('2d')!;
+    let raf: number;
+    const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+    resize();
+    window.addEventListener('resize', resize);
+
+    const COUNT = 90;
+    const pts = Array.from({ length: COUNT }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      vx: (Math.random() - 0.5) * 0.35,
+      vy: (Math.random() - 0.5) * 0.35,
+      r: Math.random() * 1.8 + 0.4,
+    }));
+
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // lines
+      for (let i = 0; i < COUNT; i++) {
+        for (let j = i + 1; j < COUNT; j++) {
+          const dx = pts[i].x - pts[j].x, dy = pts[i].y - pts[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 130) {
+            ctx.beginPath();
+            ctx.moveTo(pts[i].x, pts[i].y);
+            ctx.lineTo(pts[j].x, pts[j].y);
+            ctx.strokeStyle = `rgba(34,197,94,${0.12 * (1 - dist / 130)})`;
+            ctx.lineWidth = 0.6;
+            ctx.stroke();
+          }
+        }
+      }
+      // dots
+      pts.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(34,197,94,0.45)';
+        ctx.fill();
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0 || p.x > canvas.width)  p.vx *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+      });
+      raf = requestAnimationFrame(draw);
+    };
+    draw();
+    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', resize); };
+  }, []);
+  return <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }} />;
+}
+
+// ── Animated counter ──────────────────────────────────────
 function Counter({ to, suffix = '' }: { to: number; suffix?: string }) {
   const [val, setVal] = useState(0);
   const ref = useRef<HTMLSpanElement>(null);
@@ -9,13 +64,12 @@ function Counter({ to, suffix = '' }: { to: number; suffix?: string }) {
     const obs = new IntersectionObserver(([e]) => {
       if (!e.isIntersecting) return;
       obs.disconnect();
-      let start = 0;
-      const step = to / 60;
+      let n = 0;
+      const step = to / 70;
       const t = setInterval(() => {
-        start += step;
-        if (start >= to) { setVal(to); clearInterval(t); }
-        else setVal(Math.floor(start));
-      }, 16);
+        n += step;
+        if (n >= to) { setVal(to); clearInterval(t); } else setVal(Math.floor(n));
+      }, 14);
     }, { threshold: 0.3 });
     if (ref.current) obs.observe(ref.current);
     return () => obs.disconnect();
@@ -23,102 +77,89 @@ function Counter({ to, suffix = '' }: { to: number; suffix?: string }) {
   return <span ref={ref}>{val.toLocaleString()}{suffix}</span>;
 }
 
-// ── phone mockup with animated cards ─────────────────────
-function PhoneMockup() {
-  const cards = [
-    { name: 'Samsung A55', price: 'RWF 650k', cat: 'Electronics', emoji: '📱', color: '#0a1a0f' },
-    { name: 'Kitenge Dress', price: 'RWF 45k', cat: 'Fashion', emoji: '👗', color: '#1a0a10' },
-    { name: 'Coffee Beans 1kg', price: 'RWF 12k', cat: 'Food', emoji: '☕', color: '#1a1a0a' },
-    { name: 'HP Laptop i5', price: 'RWF 890k', cat: 'Computers', emoji: '💻', color: '#0a101a' },
-  ];
+// ── Floating product card ─────────────────────────────────
+function FloatingCard({ emoji, name, price, seller, badge, style }: {
+  emoji: string; name: string; price: string; seller: string; badge?: string; style?: React.CSSProperties;
+}) {
   return (
-    <div className="relative" style={{ width: 280, height: 560 }}>
-      {/* Phone shell */}
-      <div className="absolute inset-0 rounded-[44px] border-2 border-white/10 bg-[#0a0a0a] shadow-[0_40px_80px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.05)]" />
-      {/* Notch */}
-      <div className="absolute top-3 left-1/2 -translate-x-1/2 w-20 h-5 bg-black rounded-full z-10" />
-      {/* Screen */}
-      <div className="absolute inset-[3px] rounded-[42px] bg-black overflow-hidden">
-        {/* Status bar */}
-        <div className="flex justify-between items-center px-6 pt-8 pb-2">
-          <span className="text-[10px] text-white/50 font-bold">9:41</span>
-          <div className="flex gap-1 items-center">
-            <div className="w-3 h-1.5 rounded-sm bg-green-500" />
-            <div className="w-3 h-1.5 rounded-sm bg-white/20" />
-          </div>
+    <div className="absolute bg-[#0d0d0d] border border-white/[0.09] rounded-2xl p-3.5 shadow-2xl backdrop-blur-sm w-52"
+      style={{ ...style, animation: 'floatCard 5s ease-in-out infinite' }}>
+      <div className="flex items-center gap-2.5 mb-2.5">
+        <div className="w-10 h-10 rounded-xl bg-green-500/10 border border-green-500/15 flex items-center justify-center text-xl flex-shrink-0">
+          {emoji}
         </div>
-        {/* App header */}
-        <div className="flex items-center gap-2 px-4 pb-3">
-
-          <div className=" w-40  rounded-lg flex items-center justify-center">
-            <img src="../src/assets/shophub-logo.svg" alt="" />
-          </div>
-
-        </div>
-        {/* Category chips */}
-        <div className="flex gap-2 px-4 pb-3 overflow-hidden">
-          {['All', 'Electronics', 'Fashion', 'Food'].map((c, i) => (
-            <span key={c} className={`flex-shrink-0 text-[9px] font-bold px-2.5 py-1 rounded-full ${i === 0 ? 'bg-green-500 text-black' : 'bg-white/[0.08] text-white/50'}`}>{c}</span>
-          ))}
-        </div>
-        {/* Listing cards */}
-        <div className="px-3 flex flex-col gap-2">
-          {cards.map((card, i) => (
-            <div key={i} className="flex items-center gap-2.5 bg-white/[0.05] rounded-xl p-2.5 border border-white/[0.06]"
-              style={{ animation: `fadeUp .5s ease ${i * 120}ms both` }}>
-              <div className="w-10 h-10 rounded-lg flex items-center justify-center text-lg flex-shrink-0" style={{ background: card.color }}>
-                {card.emoji}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-semibold text-white truncate">{card.name}</p>
-                <p className="text-[9px] text-white/30">{card.cat}</p>
-              </div>
-              <span className="text-[11px] font-bold text-green-500 flex-shrink-0">{card.price}</span>
-            </div>
-          ))}
-        </div>
-        {/* Bottom nav */}
-        <div className="absolute bottom-0 inset-x-0 flex justify-around items-center py-3 px-4 bg-[#0a0a0a] border-t border-white/[0.06]">
-          {['🏠', '🔍', '💬', '👤'].map((e, i) => (
-            <div key={i} className={`w-8 h-8 flex items-center justify-center rounded-xl text-base ${i === 0 ? 'bg-green-500/15' : ''}`}>{e}</div>
-          ))}
+        <div className="flex-1 min-w-0">
+          <p className="text-[12px] font-bold text-white truncate">{name}</p>
+          <p className="text-[10px] text-white/35 truncate">{seller}</p>
         </div>
       </div>
-      {/* Glow */}
-      <div className="absolute -inset-8 rounded-[60px] pointer-events-none"
-        style={{ background: 'radial-gradient(ellipse, rgba(34,197,94,0.12) 0%, transparent 70%)' }} />
+      <div className="flex items-center justify-between">
+        <span className="text-[13px] font-black text-green-500">{price}</span>
+        {badge && (
+          <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-green-500/15 text-green-400 border border-green-500/20">
+            {badge}
+          </span>
+        )}
+      </div>
     </div>
   );
 }
 
-// ── feature card ──────────────────────────────────────────
-function FeatureCard({ icon, title, desc }: { icon: string; title: string; desc: string }) {
+// ── Category pill ─────────────────────────────────────────
+function CategoryPill({ emoji, name, count }: { emoji: string; name: string; count: string }) {
   return (
-    <div className="group p-6 rounded-2xl border border-white/[0.08] bg-white/[0.03] hover:border-green-500/40 hover:bg-green-500/[0.04] transition-all duration-300 cursor-default">
-      <div className="w-11 h-11 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center text-xl mb-4 group-hover:bg-green-500/20 transition-colors">
-        {icon}
+    <Link to="/login" className="no-underline group">
+      <div className="flex items-center gap-2.5 px-4 py-3 rounded-2xl border border-white/[0.08] bg-white/[0.03] hover:border-green-500/40 hover:bg-green-500/[0.05] transition-all duration-200 cursor-pointer">
+        <span className="text-xl">{emoji}</span>
+        <div>
+          <p className="text-[13px] font-semibold text-white group-hover:text-green-400 transition-colors">{name}</p>
+          <p className="text-[10px] text-white/30">{count} listings</p>
+        </div>
       </div>
-      <h3 className="text-[15px] font-bold text-white mb-2">{title}</h3>
-      <p className="text-[13px] text-white/40 leading-relaxed">{desc}</p>
+    </Link>
+  );
+}
+
+// ── Feature ───────────────────────────────────────────────
+function Feature({ icon, title, desc, glow }: { icon: string; title: string; desc: string; glow?: boolean }) {
+  return (
+    <div className={`group relative p-7 rounded-2xl border transition-all duration-300 cursor-default overflow-hidden
+      ${glow ? 'border-green-500/25 bg-green-500/[0.04]' : 'border-white/[0.07] bg-white/[0.02] hover:border-green-500/25 hover:bg-green-500/[0.03]'}`}>
+      {glow && <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at top left, rgba(34,197,94,0.08) 0%, transparent 60%)' }} />}
+      <div className="relative">
+        <div className="text-3xl mb-4">{icon}</div>
+        <h3 className="text-[16px] font-bold text-white mb-2.5">{title}</h3>
+        <p className="text-[13px] text-white/40 leading-relaxed">{desc}</p>
+      </div>
     </div>
   );
 }
 
-// ── testimonial ───────────────────────────────────────────
-function Testimonial({ name, role, text, initial }: { name: string; role: string; text: string; initial: string }) {
+// ── Testimonial ───────────────────────────────────────────
+function Testimonial({ name, role, text, avatar, verified }: {
+  name: string; role: string; text: string; avatar: string; verified?: boolean;
+}) {
   return (
-    <div className="p-6 rounded-2xl border border-white/[0.08] bg-white/[0.02]">
-      <div className="flex gap-1 mb-4">
-        {[...Array(5)].map((_, i) => <span key={i} className="text-green-500 text-sm">★</span>)}
+    <div className="p-6 rounded-2xl border border-white/[0.07] bg-white/[0.02] hover:border-white/[0.12] transition-all">
+      <div className="flex gap-0.5 mb-4">
+        {[...Array(5)].map((_, i) => <span key={i} className="text-green-500 text-[13px]">★</span>)}
       </div>
-      <p className="text-[13px] text-white/60 leading-relaxed mb-5">"{text}"</p>
+      <p className="text-[14px] text-white/55 leading-relaxed mb-5">"{text}"</p>
       <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-full bg-green-500 flex items-center justify-center text-black font-bold text-sm flex-shrink-0">
-          {initial}
+        <div className="w-10 h-10 rounded-full flex items-center justify-center text-[15px] font-black text-black flex-shrink-0"
+          style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}>
+          {avatar}
         </div>
         <div>
-          <p className="text-[13px] font-semibold text-white">{name}</p>
-          <p className="text-[11px] text-white/35">{role}</p>
+          <div className="flex items-center gap-1.5">
+            <p className="text-[13px] font-bold text-white">{name}</p>
+            {verified && (
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="#22c55e">
+                <path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+              </svg>
+            )}
+          </div>
+          <p className="text-[11px] text-white/30">{role}</p>
         </div>
       </div>
     </div>
@@ -128,264 +169,412 @@ function Testimonial({ name, role, text, initial }: { name: string; role: string
 // ─────────────────────────────────────────────────────────
 export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
+
   useEffect(() => {
-    const h = () => setScrolled(window.scrollY > 20);
+    const h = () => setScrolled(window.scrollY > 30);
     window.addEventListener('scroll', h);
     return () => window.removeEventListener('scroll', h);
   }, []);
 
+  const tabs = ['Buyers', 'Sellers', 'Wholesalers'];
+  const tabContent = [
+    { headline: 'Find anything in Rwanda', sub: 'Browse thousands of listings across electronics, fashion, food, and more. Chat directly with sellers and get the best deal.', cta: 'Start shopping', emoji: '🛍️' },
+    { headline: 'Grow your business online', sub: 'List products in minutes, reach buyers across the country, and manage your shop with real-time analytics.', cta: 'Open your shop', emoji: '🏪' },
+    { headline: 'Connect with bulk buyers', sub: 'List wholesale products, set minimum orders, and scale your distribution network across Rwanda effortlessly.', cta: 'Join wholesale hub', emoji: '🏭' },
+  ];
+
   return (
-    <div className="min-h-screen bg-black text-white" style={{ fontFamily: "'Outfit', sans-serif" }}>
+    <div className="min-h-screen bg-[#030303] text-white overflow-x-hidden" style={{ fontFamily: "'Outfit', sans-serif" }}>
+      <Particles />
 
       {/* ── Navbar ──────────────────────────────────────── */}
-      <nav className={`fixed top-0 inset-x-0 z-50 flex items-center justify-between px-6 md:px-12 py-4 transition-all duration-300 ${scrolled ? 'bg-black/90 backdrop-blur-xl border-b border-white/[0.08]' : ''}`}>
-        {/* Logo */}
-        <Link to="/login" className="flex items-center gap-2 no-underline">
-          <div className=" w-40  rounded-lg flex items-center justify-center">
-            <img src="../src/assets/shophub-logo.svg" alt="" />
+      <nav className={`fixed top-0 inset-x-0 z-50 flex items-center justify-between px-6 md:px-14 transition-all duration-300 ${scrolled ? 'py-3 bg-[#030303]/90 backdrop-blur-xl border-b border-white/[0.06]' : 'py-5'}`}
+        style={{ zIndex: 100 }}>
+        <Link to="/" className="flex items-center gap-2.5 no-underline">
+          <div className="w-8 h-8 rounded-lg bg-green-500 flex items-center justify-center shadow-lg shadow-green-500/30">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2.5">
+              <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
+            </svg>
           </div>
+          <span style={{ fontFamily: "'Playfair Display', serif" }} className="text-[19px] font-black tracking-tight">
+            Shop<span className="text-green-500">Hub</span>
+          </span>
         </Link>
 
-        {/* Links */}
-        <div className="hidden md:flex items-center gap-8">
-          {['Features', 'How it works', 'Pricing'].map(l => (
-            <a key={l} href={`#${l.toLowerCase().replace(/ /g, '-')}`}
-              className="text-[13px] text-white/50 hover:text-white transition-colors no-underline">{l}</a>
+        <div className="hidden md:flex items-center gap-1 bg-white/[0.04] border border-white/[0.07] rounded-full px-1.5 py-1.5">
+          {['Features', 'Categories', 'How it works', 'Pricing'].map(l => (
+            <a key={l} href={`#${l.toLowerCase().replace(/ /g,'-')}`}
+              className="text-[13px] text-white/50 hover:text-white px-3.5 py-1.5 rounded-full hover:bg-white/[0.06] transition-all no-underline">
+              {l}
+            </a>
           ))}
         </div>
 
-        {/* CTAs */}
-        <div className="flex items-center gap-3">
-          <Link to="/login" className="hidden md:block text-[13px] font-semibold text-white/60 hover:text-white transition-colors no-underline">
+        <div className="flex items-center gap-2.5">
+          <Link to="/login" className="text-[13px] font-medium text-white/50 hover:text-white transition-colors no-underline hidden md:block">
             Sign in
           </Link>
           <Link to="/register"
-            className="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-black font-bold text-[13px] rounded-full transition-all hover:-translate-y-0.5 no-underline">
-            Get started free
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
+            className="flex items-center gap-1.5 px-4 py-2 bg-green-500 hover:bg-green-400 text-black font-bold text-[13px] rounded-full transition-all hover:shadow-[0_0_20px_rgba(34,197,94,0.4)] no-underline">
+            Get started
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </Link>
         </div>
       </nav>
 
-      {/* ── Hero ────────────────────────────────────────── */}
-      <section className="min-h-screen flex items-center pt-20 pb-10 px-6 md:px-12 lg:px-24 relative overflow-hidden">
-        {/* BG glow */}
-        <div className="absolute top-1/3 left-1/4 w-96 h-96 rounded-full pointer-events-none"
-          style={{ background: 'radial-gradient(circle, rgba(34,197,94,0.08) 0%, transparent 70%)' }} />
-        <div className="absolute top-1/2 right-1/4 w-64 h-64 rounded-full pointer-events-none"
-          style={{ background: 'radial-gradient(circle, rgba(34,197,94,0.05) 0%, transparent 70%)' }} />
+      {/* ── HERO ────────────────────────────────────────── */}
+      <section className="relative min-h-screen flex flex-col items-center justify-center pt-28 pb-20 px-6 text-center" style={{ zIndex: 1 }}>
 
-        <div className="max-w-7xl mx-auto w-full flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
+        {/* Glow blobs */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[400px] rounded-full pointer-events-none blur-3xl"
+          style={{ background: 'radial-gradient(ellipse, rgba(34,197,94,0.07) 0%, transparent 70%)' }} />
 
-          {/* Left — copy */}
-          <div className="flex-1 max-w-xl" style={{ animation: 'fadeUp .7s ease both' }}>
+        {/* Badge */}
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-green-500/25 bg-green-500/[0.07] mb-7"
+          style={{ animation: 'fadeUp .6s ease both' }}>
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+          </span>
+          <span className="text-[11px] font-bold text-green-400 tracking-[2px] uppercase">Rwanda's Commerce Platform</span>
+        </div>
 
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-green-500/25 bg-green-500/[0.07] mb-6">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-[11px] font-bold text-green-400 tracking-widest uppercase">Rwanda's #1 Marketplace</span>
-            </div>
+        {/* Headline */}
+        <h1 className="max-w-4xl mx-auto leading-[1.02] font-black tracking-tight mb-6"
+          style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(44px, 7vw, 84px)', animation: 'fadeUp .6s ease .08s both' }}>
+          The marketplace<br />
+          <span className="relative inline-block">
+            <span className="text-green-500">built for Rwanda</span>
+            <svg className="absolute -bottom-2 left-0 w-full" height="8" viewBox="0 0 400 8" preserveAspectRatio="none">
+              <path d="M0 7 Q100 1 200 7 Q300 13 400 7" stroke="#22c55e" strokeWidth="2.5" fill="none" opacity=".5"/>
+            </svg>
+          </span>
+        </h1>
 
-            {/* Headline */}
-            <h1 className="font-display text-5xl md:text-6xl font-black leading-[1.05] mb-6 tracking-tight">
-              Buy. Sell.{' '}
-              <span className="text-green-500 relative">
-                Connect.
-                <svg className="absolute -bottom-2 left-0 w-full" height="6" viewBox="0 0 200 6" preserveAspectRatio="none">
-                  <path d="M0 5 Q50 0 100 5 Q150 10 200 5" stroke="#22c55e" strokeWidth="2.5" fill="none" opacity=".5" />
-                </svg>
-              </span>
-              <br />
-              <span className="text-white/30">In Rwanda.</span>
-            </h1>
+        {/* Sub */}
+        <p className="max-w-xl mx-auto text-[16px] text-white/45 leading-relaxed mb-10"
+          style={{ animation: 'fadeUp .6s ease .16s both' }}>
+          Buy, sell, and connect in real time. From street vendors to wholesale distributors —
+          ShopHub is where Rwandan commerce happens.
+        </p>
 
-            {/* Subheadline */}
-            <p className="text-[16px] text-white/50 leading-relaxed mb-8 max-w-md">
-              ShopHub connects buyers, sellers, and wholesalers across Rwanda.
-              List products, chat in real time, and grow your business — all in one place.
-            </p>
+        {/* CTAs */}
+        <div className="flex flex-col sm:flex-row items-center gap-3 mb-14" style={{ animation: 'fadeUp .6s ease .24s both' }}>
+          <Link to="/register"
+            className="group flex items-center gap-2 px-7 py-3.5 bg-green-500 hover:bg-green-400 text-black font-bold text-[14px] rounded-full transition-all hover:-translate-y-0.5 hover:shadow-[0_0_30px_rgba(34,197,94,0.5)] no-underline w-full sm:w-auto justify-center">
+            Start for free
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:translate-x-0.5 transition-transform"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </Link>
+          <Link to="/home"
+            className="flex items-center gap-2 px-7 py-3.5 border border-white/[0.1] hover:border-white/25 bg-white/[0.03] hover:bg-white/[0.06] text-white/65 hover:text-white font-semibold text-[14px] rounded-full transition-all no-underline w-full sm:w-auto justify-center">
+            Browse listings
+          </Link>
+        </div>
 
-            {/* CTAs */}
-            <div className="flex items-center gap-3 flex-wrap mb-10">
-              <Link to="/register"
-                className="flex items-center gap-2 px-6 py-3.5 bg-green-500 hover:bg-green-600 text-black font-bold text-[14px] rounded-full transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_30px_rgba(34,197,94,0.3)] no-underline">
-                Start selling free
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-              </Link>
-              <Link to="/login"
-                className="flex items-center gap-2 px-6 py-3.5 border border-white/[0.12] hover:border-green-500/40 bg-white/[0.03] hover:bg-green-500/[0.05] text-white/70 hover:text-white font-semibold text-[14px] rounded-full transition-all no-underline">
-                Browse listings
-              </Link>
-            </div>
-
-            {/* Social proof */}
-            <div className="flex items-center gap-4 flex-wrap">
-              <div className="flex -space-x-2">
-                {['T', 'U', 'A', 'M', 'R'].map((l, i) => (
-                  <div key={i} className="w-8 h-8 rounded-full border-2 border-black flex items-center justify-center text-[10px] font-bold text-black"
-                    style={{ background: ['#22c55e', '#16a34a', '#15803d', '#166534', '#14532d'][i] }}>
-                    {l}
-                  </div>
-                ))}
-              </div>
-              <p className="text-[12px] text-white/40">
-                <span className="text-white font-bold">2,400+</span> sellers already on ShopHub
-              </p>
-            </div>
+        {/* Social proof bar */}
+        <div className="flex items-center gap-6 flex-wrap justify-center" style={{ animation: 'fadeUp .6s ease .32s both' }}>
+          <div className="flex -space-x-2.5">
+            {['A','U','J','M','R','K'].map((l,i) => (
+              <div key={i} className="w-8 h-8 rounded-full border-2 border-[#030303] flex items-center justify-center text-[10px] font-black text-black"
+                style={{ background: `hsl(${140 + i * 10},60%,${40 + i * 3}%)` }}>{l}</div>
+            ))}
           </div>
-
-          {/* Right — phone mockup */}
-          <div className="flex-shrink-0 flex items-center justify-center" style={{ animation: 'fadeUp .7s ease .15s both' }}>
-            <PhoneMockup />
+          <p className="text-[12px] text-white/35"><span className="text-white font-bold">2,400+</span> active sellers · <span className="text-white font-bold">18,000+</span> listings</p>
+          <div className="flex items-center gap-1.5 text-[12px] text-white/35">
+            <div className="flex gap-0.5">{[...Array(5)].map((_,i) => <span key={i} className="text-green-500 text-[10px]">★</span>)}</div>
+            <span>4.9 / 5 rating</span>
           </div>
+        </div>
+
+        {/* Floating product cards */}
+        <div className="hidden lg:block absolute inset-0 pointer-events-none" style={{ zIndex: -1 }}>
+          <FloatingCard emoji="📱" name="Samsung Galaxy A55" price="RWF 650,000" seller="TechCity Kigali" badge="Verified"
+            style={{ top: '22%', left: '4%', animationDelay: '0s' }} />
+          <FloatingCard emoji="👗" name="Kitenge Dress Set" price="RWF 45,000" seller="Umuco Fashion" badge="New"
+            style={{ top: '55%', left: '2%', animationDelay: '1.5s' }} />
+          <FloatingCard emoji="☕" name="Arabica Beans 1kg" price="RWF 12,000" seller="Rwanda Coffee Co." badge="Hot"
+            style={{ top: '25%', right: '4%', animationDelay: '0.7s' }} />
+          <FloatingCard emoji="🛋️" name="Agaseke Basket Set" price="RWF 35,000" seller="Ikirezi Crafts"
+            style={{ top: '58%', right: '2%', animationDelay: '2s' }} />
         </div>
       </section>
 
-      {/* ── Stats bar ───────────────────────────────────── */}
-      <section className="border-y border-white/[0.07] bg-white/[0.02] py-10 px-6 md:px-12">
-        <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+      {/* ── STATS ───────────────────────────────────────── */}
+      <section className="relative py-14 border-y border-white/[0.06]" style={{ zIndex: 1, background: 'linear-gradient(180deg, #030303 0%, #060f09 50%, #030303 100%)' }}>
+        <div className="max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           {[
-            { label: 'Active Listings', to: 18400, suffix: '+' },
-            { label: 'Verified Sellers', to: 2400, suffix: '+' },
-            { label: 'Categories', to: 50, suffix: '+' },
-            { label: 'Daily Messages', to: 9200, suffix: '+' },
-          ].map(s => (
-            <div key={s.label}>
-              <p className="font-display text-3xl md:text-4xl font-black text-green-500 mb-1">
-                <Counter to={s.to} suffix={s.suffix} />
+            { n: 18400, s: '+', label: 'Active Listings' },
+            { n: 2400,  s: '+', label: 'Verified Sellers' },
+            { n: 50,    s: '+', label: 'Categories' },
+            { n: 9200,  s: '+', label: 'Daily Chats' },
+          ].map(({ n, s, label }) => (
+            <div key={label}>
+              <p style={{ fontFamily: "'Playfair Display', serif" }} className="text-4xl md:text-5xl font-black text-green-500 mb-1.5">
+                <Counter to={n} suffix={s} />
               </p>
-              <p className="text-[12px] text-white/35 font-medium uppercase tracking-widest">{s.label}</p>
+              <p className="text-[11px] text-white/30 font-semibold uppercase tracking-widest">{label}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ── Features ────────────────────────────────────── */}
-      <section id="features" className="py-24 px-6 md:px-12 lg:px-24">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-14">
-            <p className="text-[11px] font-bold tracking-[3px] uppercase text-green-500/60 mb-3">Why ShopHub</p>
-            <h2 className="font-display text-4xl font-black text-white mb-4">Everything you need to trade</h2>
-            <p className="text-white/40 text-[15px] max-w-lg mx-auto">
-              Built for Rwandan commerce — from a single seller to wholesale distributors.
-            </p>
+      {/* ── TABS: Buyer / Seller / Wholesale ─────────────── */}
+      <section className="relative py-28 px-6 md:px-14" style={{ zIndex: 1 }}>
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <p className="text-[11px] font-bold tracking-[3px] uppercase text-green-500/50 mb-3">One platform</p>
+            <h2 style={{ fontFamily: "'Playfair Display', serif" }} className="text-4xl md:text-5xl font-black text-white mb-4">
+              Built for everyone
+            </h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            <FeatureCard icon="💬" title="Real-time Chat" desc="Message sellers directly from any listing. Negotiate prices, ask questions, and close deals instantly." />
-            <FeatureCard icon="🏪" title="Your Own Shop" desc="Create a branded storefront with all your listings, ratings, and sales history in one place." />
-            <FeatureCard icon="🏭" title="Wholesale Hub" desc="Connect with bulk buyers and wholesalers. Set minimum order quantities and get volume deals." />
-            <FeatureCard icon="📍" title="Near Me" desc="Find listings close to you in Kigali, Huye, Musanze, and across all Rwanda's provinces." />
-            <FeatureCard icon="✅" title="Verified Sellers" desc="Every seller goes through identity verification so you know exactly who you're buying from." />
-            <FeatureCard icon="📊" title="Seller Analytics" desc="Track views, messages, and sales. Understand what's working and grow your shop with data." />
+
+          {/* Tab switcher */}
+          <div className="flex justify-center mb-10">
+            <div className="flex gap-1 bg-white/[0.04] border border-white/[0.07] p-1.5 rounded-2xl">
+              {tabs.map((t, i) => (
+                <button key={t} onClick={() => setActiveTab(i)}
+                  className={`px-5 py-2.5 rounded-xl text-[13px] font-semibold transition-all cursor-pointer
+                    ${activeTab === i ? 'bg-green-500 text-black shadow-lg shadow-green-500/25' : 'text-white/40 hover:text-white/70'}`}>
+                  {t}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Tab content */}
+          <div className="flex flex-col md:flex-row items-center gap-12 md:gap-20" key={activeTab}
+            style={{ animation: 'fadeUp .4s ease both' }}>
+            <div className="flex-1 max-w-lg">
+              <div className="text-5xl mb-6">{tabContent[activeTab].emoji}</div>
+              <h3 style={{ fontFamily: "'Playfair Display', serif" }} className="text-3xl font-black text-white mb-4">
+                {tabContent[activeTab].headline}
+              </h3>
+              <p className="text-[15px] text-white/45 leading-relaxed mb-8">{tabContent[activeTab].sub}</p>
+              <Link to="/register"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-400 text-black font-bold text-[14px] rounded-full transition-all hover:shadow-[0_0_24px_rgba(34,197,94,0.4)] no-underline">
+                {tabContent[activeTab].cta}
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </Link>
+            </div>
+            {/* Visual */}
+            <div className="flex-1 flex items-center justify-center">
+              <div className="relative w-72 h-64">
+                <div className="absolute inset-0 rounded-3xl border border-green-500/15 bg-green-500/[0.03]" />
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6">
+                  {[0,1,2].map(i => (
+                    <div key={i} className="w-full flex items-center gap-3 bg-white/[0.04] border border-white/[0.07] rounded-xl p-3"
+                      style={{ animation: `fadeUp .4s ease ${i * 100}ms both` }}>
+                      <div className="w-9 h-9 rounded-lg bg-green-500/10 border border-green-500/15 flex items-center justify-center text-lg flex-shrink-0">
+                        {['📦','💬','📊'][i]}
+                      </div>
+                      <div>
+                        <p className="text-[12px] font-semibold text-white">{[
+                          activeTab === 0 ? '3 new listings nearby' : activeTab === 1 ? '3 new orders today' : '3 bulk inquiries',
+                          activeTab === 0 ? 'Price negotiated ✓'   : activeTab === 1 ? 'Message from buyer'  : 'Distribution request',
+                          activeTab === 0 ? 'Delivery confirmed'    : activeTab === 1 ? 'Analytics updated'   : 'Contract signed',
+                        ][i]}</p>
+                        <p className="text-[10px] text-white/25">Just now</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── How it works ────────────────────────────────── */}
-      <section id="how-it-works" className="py-24 px-6 md:px-12 bg-white/[0.02] border-y border-white/[0.06]">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-14">
-            <p className="text-[11px] font-bold tracking-[3px] uppercase text-green-500/60 mb-3">Simple process</p>
-            <h2 className="font-display text-4xl font-black text-white">Up and running in minutes</h2>
+      {/* ── CATEGORIES ──────────────────────────────────── */}
+      <section id="categories" className="relative py-24 px-6 md:px-14 border-t border-white/[0.05]" style={{ zIndex: 1 }}>
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-end justify-between mb-10">
+            <div>
+              <p className="text-[11px] font-bold tracking-[3px] uppercase text-green-500/50 mb-2">Shop by category</p>
+              <h2 style={{ fontFamily: "'Playfair Display', serif" }} className="text-4xl font-black text-white">
+                What are you looking for?
+              </h2>
+            </div>
+            <Link to="/home" className="text-[13px] font-semibold text-green-500 hover:text-green-400 transition-colors no-underline hidden md:block">
+              View all categories →
+            </Link>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
-            {/* Connector line */}
-            <div className="hidden md:block absolute top-8 left-[calc(16.67%+24px)] right-[calc(16.67%+24px)] h-px bg-gradient-to-r from-green-500/30 via-green-500/60 to-green-500/30" />
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
             {[
-              { step: '01', icon: '📝', title: 'Create account', desc: 'Sign up as a buyer, seller, or wholesaler. Verify your identity with your national ID.' },
-              { step: '02', icon: '📦', title: 'Post your listing', desc: 'Add photos, set your price, and go live in under 2 minutes. Buyers nearby will find you.' },
-              { step: '03', icon: '💰', title: 'Start earning', desc: 'Chat with interested buyers, negotiate, and complete your sale. Money in your pocket.' },
+              { e:'📱', n:'Electronics',  c:'4,200' },
+              { e:'👗', n:'Fashion',      c:'3,800' },
+              { e:'🍔', n:'Food & Drinks',c:'2,100' },
+              { e:'🛋️', n:'Home & Living',c:'1,900' },
+              { e:'💻', n:'Computers',    c:'980' },
+              { e:'💄', n:'Beauty',       c:'1,450' },
+              { e:'🏭', n:'Wholesale',    c:'760' },
+              { e:'⚽', n:'Sports',       c:'620' },
+              { e:'🌿', n:'Health',       c:'850' },
+              { e:'📚', n:'Books',        c:'430' },
+            ].map(cat => <CategoryPill key={cat.n} emoji={cat.e} name={cat.n} count={cat.c} />)}
+          </div>
+        </div>
+      </section>
+
+      {/* ── FEATURES ────────────────────────────────────── */}
+      <section id="features" className="relative py-24 px-6 md:px-14" style={{ zIndex: 1 }}>
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-14">
+            <p className="text-[11px] font-bold tracking-[3px] uppercase text-green-500/50 mb-3">Features</p>
+            <h2 style={{ fontFamily: "'Playfair Display', serif" }} className="text-4xl md:text-5xl font-black text-white mb-4">
+              Commerce, reimagined
+            </h2>
+            <p className="text-white/35 text-[15px] max-w-lg mx-auto">Everything you need to buy, sell, and grow — designed for the Rwandan market.</p>
+          </div>
+
+          {/* Featured large card + 2 small */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div className="md:col-span-2">
+              <Feature glow icon="💬" title="Real-time Marketplace Chat"
+                desc="Don't just browse — negotiate. Message any seller directly from their listing. Discuss prices, ask about condition, arrange delivery — all inside ShopHub's built-in messenger that works like WhatsApp." />
+            </div>
+            <Feature icon="✅" title="Verified Seller Badges"
+              desc="Every seller is ID-verified. Know exactly who you're transacting with before you send a single franc." />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Feature icon="📍" title="Near Me Search"
+              desc="Find listings close to you — in your sector, district, or province. Local commerce made easy." />
+            <Feature icon="📊" title="Seller Analytics"
+              desc="See views, messages, and conversion data for every listing. Grow your shop with real data." />
+            <Feature icon="🏭" title="Wholesale Hub"
+              desc="Connect bulk buyers with large distributors. Set minimum order quantities and negotiate volume pricing." />
+          </div>
+        </div>
+      </section>
+
+      {/* ── HOW IT WORKS ────────────────────────────────── */}
+      <section id="how-it-works" className="relative py-24 px-6 md:px-14 border-t border-white/[0.05]" style={{ zIndex: 1, background: 'linear-gradient(180deg, transparent 0%, rgba(34,197,94,0.02) 50%, transparent 100%)' }}>
+        <div className="max-w-4xl mx-auto text-center">
+          <p className="text-[11px] font-bold tracking-[3px] uppercase text-green-500/50 mb-3">Process</p>
+          <h2 style={{ fontFamily: "'Playfair Display', serif" }} className="text-4xl md:text-5xl font-black text-white mb-16">
+            Live in 3 steps
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+            <div className="hidden md:block absolute top-10 left-[22%] right-[22%] h-px"
+              style={{ background: 'linear-gradient(90deg, transparent, rgba(34,197,94,0.4), transparent)' }} />
+            {[
+              { n:'01', i:'📝', t:'Create account', d:'Sign up in 60 seconds. Verify with your national ID to become a trusted seller.' },
+              { n:'02', i:'📦', t:'List your product', d:'Add photos, set price, choose category. Your listing is live instantly — no approval wait.' },
+              { n:'03', i:'💰', t:'Make the sale', d:'Buyers message you, you negotiate, you close the deal. Money moves, commerce works.' },
             ].map((s, i) => (
-              <div key={i} className="flex flex-col items-center text-center relative">
-                <div className="relative mb-5">
-                  <div className="w-16 h-16 rounded-2xl bg-green-500/10 border border-green-500/25 flex items-center justify-center text-2xl">
-                    {s.icon}
+              <div key={i} className="flex flex-col items-center relative">
+                <div className="relative mb-6">
+                  <div className="w-20 h-20 rounded-2xl bg-white/[0.03] border border-white/[0.08] flex items-center justify-center text-3xl">
+                    {s.i}
                   </div>
-                  <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-green-500 text-black text-[10px] font-black flex items-center justify-center">
+                  <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-green-500 text-black text-[10px] font-black flex items-center justify-center shadow-lg shadow-green-500/30">
                     {i + 1}
                   </span>
                 </div>
-                <h3 className="text-[15px] font-bold text-white mb-2">{s.title}</h3>
-                <p className="text-[13px] text-white/40 leading-relaxed">{s.desc}</p>
+                <h3 className="text-[16px] font-bold text-white mb-2.5">{s.t}</h3>
+                <p className="text-[13px] text-white/35 leading-relaxed">{s.d}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── Testimonials ────────────────────────────────── */}
-      <section className="py-24 px-6 md:px-12 lg:px-24">
+      {/* ── TESTIMONIALS ────────────────────────────────── */}
+      <section className="relative py-24 px-6 md:px-14 border-t border-white/[0.05]" style={{ zIndex: 1 }}>
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-14">
-            <p className="text-[11px] font-bold tracking-[3px] uppercase text-green-500/60 mb-3">Testimonials</p>
-            <h2 className="font-display text-4xl font-black text-white">Loved by sellers across Rwanda</h2>
+            <p className="text-[11px] font-bold tracking-[3px] uppercase text-green-500/50 mb-3">Social proof</p>
+            <h2 style={{ fontFamily: "'Playfair Display', serif" }} className="text-4xl font-black text-white">
+              Sellers love ShopHub
+            </h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <Testimonial
-              initial="A" name="Amina Uwase" role="Fashion Seller · Kigali"
-              text="I listed my Kitenge collection on ShopHub and got 3 buyers messaging me within the first hour. The chat feature is amazing." />
-            <Testimonial
-              initial="J" name="Jean-Claude Nkusi" role="Electronics Wholesaler · Kigali"
-              text="As a wholesaler I needed a platform that understood bulk deals. ShopHub's wholesale tier is exactly what I needed to scale." />
-            <Testimonial
-              initial="M" name="Marie Mukamana" role="Coffee Producer · Huye"
-              text="Buyers from Kigali find my coffee easily now. ShopHub helped me reach customers I never could have found on my own." />
+            <Testimonial avatar="A" name="Amina Uwase" role="Fashion Seller · Kigali" verified
+              text="I listed my Kitenge collection and got 3 buyers within the first hour. The chat is incredible — I closed RWF 180,000 in sales on day one." />
+            <Testimonial avatar="J" name="Jean-Claude Nkusi" role="Electronics Wholesaler" verified
+              text="ShopHub's wholesale tier is exactly what I needed. My bulk listings reach serious buyers. Volume has grown 3x since joining." />
+            <Testimonial avatar="M" name="Marie Mukamana" role="Coffee Producer · Huye" verified
+              text="Buyers from Kigali find my coffee now without me doing anything. ShopHub handles the discovery, I just need to grow my crop." />
           </div>
         </div>
       </section>
 
-      {/* ── Final CTA ───────────────────────────────────── */}
-      <section className="py-24 px-6 md:px-12 text-center relative overflow-hidden">
+      {/* ── FINAL CTA ───────────────────────────────────── */}
+      <section className="relative py-32 px-6 text-center overflow-hidden" style={{ zIndex: 1 }}>
         <div className="absolute inset-0 pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse at center, rgba(34,197,94,0.07) 0%, transparent 70%)' }} />
+          style={{ background: 'radial-gradient(ellipse at center, rgba(34,197,94,0.09) 0%, transparent 65%)' }} />
+        {/* Grid overlay */}
+        <div className="absolute inset-0 pointer-events-none opacity-[0.03]"
+          style={{ backgroundImage: 'linear-gradient(rgba(34,197,94,1) 1px, transparent 1px), linear-gradient(90deg, rgba(34,197,94,1) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
+
         <div className="relative max-w-2xl mx-auto">
-          <h2 className="font-display text-5xl font-black text-white mb-5 leading-tight">
-            Ready to start<br />
-            <span className="text-green-500">trading?</span>
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-green-500/25 bg-green-500/[0.07] mb-8">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+            <span className="text-[11px] font-bold text-green-400 tracking-[2px] uppercase">Free to join · No credit card</span>
+          </div>
+          <h2 style={{ fontFamily: "'Playfair Display', serif" }} className="text-5xl md:text-6xl font-black text-white mb-5 leading-tight">
+            Start trading<br /><span className="text-green-500">today.</span>
           </h2>
-          <p className="text-white/40 text-[15px] mb-10 max-w-md mx-auto">
-            Join thousands of Rwandan buyers, sellers, and wholesalers already using ShopHub.
+          <p className="text-white/35 text-[15px] mb-10 max-w-md mx-auto leading-relaxed">
+            Join thousands of Rwandan buyers, sellers, and wholesalers. List your first product in under 2 minutes.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link to="/register"
-              className="flex items-center gap-2 px-8 py-4 bg-green-500 hover:bg-green-600 text-black font-bold text-[15px] rounded-full transition-all hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(34,197,94,0.35)] no-underline w-full sm:w-auto justify-center">
+              className="group flex items-center gap-2 px-8 py-4 bg-green-500 hover:bg-green-400 text-black font-bold text-[15px] rounded-full transition-all hover:-translate-y-0.5 hover:shadow-[0_0_40px_rgba(34,197,94,0.5)] no-underline w-full sm:w-auto justify-center">
               Create free account
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:translate-x-0.5 transition-transform"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </Link>
-            <Link to="/login"
-              className="flex items-center gap-2 px-8 py-4 border border-white/[0.12] hover:border-white/25 text-white/60 hover:text-white font-semibold text-[15px] rounded-full transition-all no-underline w-full sm:w-auto justify-center">
-              Sign in
+            <Link to="/home"
+              className="flex items-center gap-2 px-8 py-4 border border-white/[0.1] hover:border-white/20 bg-white/[0.03] hover:bg-white/[0.05] text-white/55 hover:text-white font-semibold text-[15px] rounded-full transition-all no-underline w-full sm:w-auto justify-center">
+              Browse without signing up
             </Link>
           </div>
-          <p className="text-[11px] text-white/20 mt-5">Free to join · No credit card · List in 2 minutes</p>
         </div>
       </section>
 
       {/* ── Footer ──────────────────────────────────────── */}
-      <footer className="border-t border-white/[0.07] py-10 px-6 md:px-12">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className=" w-40  rounded-lg flex items-center justify-center">
-            <img src="../src/assets/shophub-logo.svg" alt="" />
+      <footer className="relative border-t border-white/[0.06] py-12 px-6 md:px-14" style={{ zIndex: 1 }}>
+        <div className="max-w-6xl mx-auto">
+          <div className="flex flex-col md:flex-row items-start justify-between gap-10 mb-10">
+            <div className="max-w-xs">
+              <div className="flex items-center gap-2.5 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-green-500 flex items-center justify-center shadow-lg shadow-green-500/25">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2.5">
+                    <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
+                  </svg>
+                </div>
+                <span style={{ fontFamily:"'Playfair Display',serif" }} className="text-[18px] font-black">Shop<span className="text-green-500">Hub</span></span>
+              </div>
+              <p className="text-[13px] text-white/30 leading-relaxed">Rwanda's commerce platform connecting buyers, sellers, and wholesalers in real time.</p>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-8 text-[13px]">
+              {[
+                { title:'Platform', links:['Home','Browse Listings','Post a Listing','Wholesale Hub'] },
+                { title:'Company',  links:['About','Blog','Careers','Press'] },
+                { title:'Support',  links:['Help Center','Privacy Policy','Terms','Contact'] },
+              ].map(col => (
+                <div key={col.title}>
+                  <p className="font-bold text-white/60 mb-3 text-[11px] uppercase tracking-widest">{col.title}</p>
+                  <div className="flex flex-col gap-2">
+                    {col.links.map(l => (
+                      <a key={l} href="#" className="text-white/25 hover:text-white/60 transition-colors no-underline">{l}</a>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="flex gap-6">
-            {['Privacy', 'Terms', 'Contact', 'Help'].map(l => (
-              <a key={l} href="#" className="text-[12px] text-white/30 hover:text-white transition-colors no-underline">{l}</a>
-            ))}
+          <div className="flex flex-col md:flex-row items-center justify-between pt-6 border-t border-white/[0.06] gap-3">
+            <p className="text-[12px] text-white/20">© 2025 ShopHub · Made in Rwanda 🇷🇼</p>
+            <p className="text-[12px] text-white/20">Buy · Sell · Connect</p>
           </div>
-          <p className="text-[11px] text-white/20">© 2025 ShopHub · Made in Rwanda 🇷🇼</p>
         </div>
       </footer>
 
       <style>{`
-        @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:none} }
+        @keyframes fadeUp      { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:none} }
+        @keyframes floatCard   { 0%,100%{transform:translateY(0px)} 50%{transform:translateY(-10px)} }
       `}</style>
-
     </div>
   );
 }
